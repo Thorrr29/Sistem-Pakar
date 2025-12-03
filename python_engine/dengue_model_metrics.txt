@@ -1,0 +1,18 @@
+Dengue Model Training Metrics
+==============================
+Best model        : LogisticRegression
+Test accuracy     : 0.9902
+Precision (weighted): 0.9902
+Recall (weighted) : 0.9902
+F1-score (weighted): 0.9902
+
+Classification report:
+              precision    recall  f1-score   support
+
+    Negative       0.98      0.98      0.98        64
+    Positive       0.99      0.99      0.99       140
+
+    accuracy                           0.99       204
+   macro avg       0.99      0.99      0.99       204
+weighted avg       0.99      0.99      0.99       204
+
