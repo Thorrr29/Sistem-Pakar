@@ -1,9 +1,9 @@
-## Sistem Pakar Deteksi Penyakit Gigi (Laravel + Python FastAPI)
+## Sistem Pakar Diagnosis Dengue (Laravel + Python FastAPI)
 
-Aplikasi web sistem pakar untuk membantu mendeteksi kemungkinan penyakit gigi berdasarkan gejala yang dipilih pasien.
+Aplikasi web sistem pakar untuk membantu memprediksi kemungkinan infeksi **dengue (demam berdarah)** berdasarkan data klinis pasien, menggunakan kombinasi **Machine Learning + Fuzzy Expert System**. Aplikasi semula dikembangkan untuk penyakit gigi, namun modul konsultasi utama kini berfokus pada dengue, sementara modul penyakit gigi tetap tersedia di area admin sebagai fitur tambahan/legacy.
 
 - Backend & frontend utama: Laravel 12 (PHP 8.2+)
-- Database: MySQL/MariaDB
+- Database: PostgreSQL (default, bisa disesuaikan ke MySQL/MariaDB)
 - Autentikasi: Laravel Breeze (Blade + Tailwind/Bootstrap)
 - Engine sistem pakar: Python 3 (FastAPI) di folder `python_engine`
 
@@ -15,34 +15,41 @@ Aplikasi web sistem pakar untuk membantu mendeteksi kemungkinan penyakit gigi be
 
 1. Buka halaman utama
    - Akses: `http://localhost:8000/`
-   - Anda akan melihat judul **“Sistem Pakar Deteksi Penyakit Gigi”** dan tombol **“Mulai Konsultasi”**.
+   - Anda akan melihat judul sistem pakar dan tombol **“Mulai Konsultasi”**.
 2. Mulai konsultasi
    - Klik tombol **“Mulai Konsultasi”**, atau buka menu **Konsultasi** di navbar (`/konsultasi`).
 3. Isi data diri
    - **Nama Pasien**: wajib diisi.
    - **Email**: opsional (memudahkan jika kelak ingin kirim hasil konsultasi via email).
-4. Pilih gejala
-   - Di bagian **“Pilih Gejala yang Anda Rasakan”** akan muncul daftar gejala (G01, G02, dst).
-   - Centang semua gejala yang sesuai dengan kondisi Anda saat ini (minimal 1 gejala wajib dipilih).
+4. Isi data klinis dengue
+   - Form konsultasi meminta informasi klinis utama, antara lain:
+     - Jenis kelamin (`Gender`).
+     - Usia (`Age`).
+     - Jumlah trombosit (`Platelet Count`).
+     - Jumlah leukosit (`WBC`).
+     - Demam (ya/tidak) dan durasi demam (`Fever`, `Duration_of_Fever`).
+     - Gejala penyerta: sakit kepala, nyeri otot, ruam, muntah (`Headache`, `Muscle_Pain`, `Rash`, `Vomiting`).
+   - Nilai laboratorium (trombosit, leukosit) bersifat opsional; jika tidak diisi akan diimputasi oleh model.
 5. Proses diagnosa
    - Klik tombol **“Proses Diagnosa”** di bagian bawah form.
    - Sistem akan:
-     - Mengirim daftar gejala ke engine Python (`/infer`).
-     - Mendapatkan hasil penyakit yang paling mungkin beserta skor.
+     - Mengirim data klinis ke engine Python (`/infer`).
+     - Mendapatkan prediksi status dengue (Positive / Negative), probabilitas, dan tingkat kepercayaan fuzzy.
      - Menyimpan data ke tabel `konsultasi`.
 6. Melihat hasil konsultasi
    - Setelah proses berhasil, Anda akan diarahkan ke halaman **Hasil Konsultasi** (`/konsultasi/{id}`):
      - Menampilkan nama pasien dan tanggal konsultasi.
-     - Menampilkan **Nama Penyakit**, **Kode Penyakit**, dan **Skor Kepercayaan** (dalam persen).
-     - Menampilkan **Deskripsi penyakit** dan **Saran penanganan** dari pakar.
-     - Menampilkan daftar **gejala yang Anda pilih**.
-     - Jika tersedia, juga tampil **catatan mesin inferensi** (penjelasan rule dan perhitungan skor).
+     - Menampilkan **Prediksi** (Positive / Negative) dari model.
+     - Menampilkan **Probabilitas positif dengue** dan **Fuzzy Confidence** (weak / moderate / strong).
+     - Menampilkan **penjelasan sistem** (bagaimana probabilitas diinterpretasi oleh fuzzy logic).
+     - Menampilkan tabel **data klinis yang dikirim** ke engine Python.
+     - Menyediakan **catatan lengkap engine** (JSON) untuk kebutuhan audit/riset.
    - Tersedia tombol:
      - **“Konsultasi Ulang”** → kembali ke form konsultasi.
-     - **“Cetak / Download PDF”** → saat ini masih placeholder (belum aktif).
+     - **“Cetak / Download PDF”** → mengunduh laporan PDF hasil diagnosis berbasis ML + Fuzzy.
 7. Catatan penting
-   - Hasil sistem pakar ini **bukan diagnosis medis final**.
-   - Gunakan sebagai panduan awal, dan selalu lakukan pemeriksaan langsung ke dokter gigi.
+   - Sistem ini menggunakan model yang telah dilatih dan divalidasi pada dataset klinis dengue, serta diperkuat dengan fuzzy expert system.
+   - Hasil diagnosis ditujukan sebagai **alat bantu keputusan**; interpretasi klinis dan keputusan akhir tetap berada di tangan tenaga kesehatan profesional.
 
 ### 2. Sebagai Admin (Dokter / Pakar)
 
@@ -54,57 +61,39 @@ Aplikasi web sistem pakar untuk membantu mendeteksi kemungkinan penyakit gigi be
 2. Masuk ke dashboard admin
    - Setelah login, buka: `http://localhost:8000/admin`.
    - Di halaman **Dashboard Admin** Anda akan melihat:
-     - Total penyakit.
-     - Total gejala.
-     - Total konsultasi.
+     - Total penyakit (modul penyakit gigi legacy).
+     - Total gejala (modul penyakit gigi legacy).
+     - Total konsultasi (konsultasi dengue yang masuk).
      - Daftar **konsultasi terbaru** dengan link ke detail.
-3. Mengelola data penyakit
-   - Menu **Penyakit** (`/admin/penyakit`):
-     - Tombol **“Tambah Penyakit”** untuk menambah data baru:
-       - Kode penyakit (mis. P01).
-       - Nama penyakit (mis. Karies Gigi).
-       - Deskripsi dan saran penanganan.
-     - Bisa **edit**, **hapus**, dan **lihat detail** penyakit.
-4. Mengelola data gejala
-   - Menu **Gejala** (`/admin/gejala`):
-     - Tambah gejala baru dengan kode (Gxx), nama gejala, dan deskripsi.
-     - Bisa **edit**, **hapus**, dan **lihat detail** gejala.
-   - Gejala-gejala ini akan muncul di form konsultasi pasien.
-5. Mengelola aturan (rule) sistem pakar
-   - Menu **Aturan** (`/admin/aturan`):
-     - Tambah aturan baru:
-       - Kode aturan (Rxx).
-       - Pilih **Penyakit** (kesimpulan rule).
-       - Pilih satu atau lebih **Gejala** sebagai premis (IF gejala-gejala ini terpenuhi THEN penyakit).
-       - Isi nilai **Confidence Rule** (0–1) untuk memberi bobot kekuatan aturan.
-     - Bisa **edit**, **hapus**, dan **lihat detail** aturan.
-6. Melihat riwayat konsultasi pasien
+3. Melihat riwayat konsultasi pasien (dengue)
    - Menu **Konsultasi** (`/admin/konsultasi`):
-     - Menampilkan daftar semua konsultasi:
-       - Nama pasien, penyakit hasil diagnosa, skor, tanggal konsultasi.
+     - Menampilkan daftar semua konsultasi dengue:
+       - Nama pasien, hasil prediksi (diturunkan dari data engine), skor kepercayaan (probabilitas positif), tanggal konsultasi.
      - Klik tombol **Detail** untuk melihat:
        - Data pasien.
-       - Penyakit dan skor kepercayaan.
-       - Gejala yang dipilih.
-       - Catatan engine Python (detail rule dan perhitungan).
+       - Skor kepercayaan.
+       - Data klinis yang dikirim.
+       - Catatan engine Python (output lengkap ML + fuzzy).
    - Menu konsultasi hanya **read-only**: tidak ada form tambah/edit/hapus dari admin.
+4. Mengelola data penyakit/gejala/aturan (modul penyakit gigi – opsional/legacy)
+   - Menu **Penyakit**, **Gejala**, dan **Aturan** di area admin masih mencerminkan rancangan awal sistem pakar penyakit gigi berbasis rule.
+   - Modul ini bisa tetap digunakan untuk keperluan riset/eksperimen rule-based (misalnya memetakan penyakit gigi), namun tidak lagi dipakai di alur konsultasi dengue.
 7. Logout
    - Di navbar admin terdapat tombol **Logout** (form POST ke `/logout`) untuk keluar dari akun admin.
 
 ### Fitur Utama
 
 - Pasien (tanpa login):
-  - Mengisi nama/email dan memilih gejala gigi/mulut.
-  - Sistem mengirim gejala ke service Python (`/infer`) dan menampilkan hasil diagnosa:
-    - Nama penyakit gigi paling mungkin.
-    - Skor kepercayaan.
-    - Saran penanganan.
+  - Mengisi data diri dan **data klinis dengue** (jenis kelamin, usia, trombosit, leukosit, demam, gejala penyerta).
+  - Sistem mengirim fitur klinis ke service Python (`/infer`) dan menampilkan hasil diagnosis:
+    - Prediksi status dengue (Positive / Negative).
+    - Probabilitas positif dengue.
+    - Tingkat kepercayaan fuzzy (weak / moderate / strong) dan penjelasan model.
+    - Laporan PDF hasil konsultasi yang dapat diunduh.
 - Admin (dokter/pakar, login sebagai admin):
-  - Dashboard ringkas (jumlah penyakit, gejala, konsultasi).
-  - CRUD Penyakit Gigi.
-  - CRUD Gejala.
-  - CRUD Aturan (rule) IF gejala THEN penyakit.
-  - Melihat riwayat konsultasi (read-only).
+  - Dashboard ringkas (jumlah penyakit/gejala legacy untuk gigi, serta jumlah konsultasi dengue).
+  - Melihat riwayat konsultasi dengue berikut detail dan catatan engine (read-only).
+  - Modul CRUD Penyakit/Gejala/Aturan (penyakit gigi, legacy) tetap tersedia untuk tujuan pengembangan/riset rule-based.
 
 ---
 
@@ -130,7 +119,7 @@ cp .env.example .env
 Contoh konfigurasi penting:
 
 ```env
-APP_NAME="Sistem Pakar Gigi"
+APP_NAME="Sistem Pakar Dengue"
 APP_ENV=local
 APP_DEBUG=true
 APP_URL=http://localhost
@@ -138,7 +127,7 @@ APP_URL=http://localhost
 DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
 DB_PORT=5432
-DB_DATABASE=sispak_gigi
+DB_DATABASE=sispak
 DB_USERNAME=postgres
 DB_PASSWORD=
 
@@ -146,7 +135,7 @@ DB_PASSWORD=
 PYTHON_ENGINE_URL=http://localhost:8001
 ```
 
-Buat database `sispak_gigi]` di MySQL terlebih dahulu.
+Buat database `sispak` di PostgreSQL (atau sesuaikan dengan konfigurasi database Anda).
 
 ---
 
