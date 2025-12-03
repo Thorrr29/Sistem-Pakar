@@ -3,7 +3,7 @@
 Aplikasi web sistem pakar untuk membantu memprediksi kemungkinan infeksi **dengue (demam berdarah)** berdasarkan data klinis pasien, menggunakan kombinasi **Machine Learning + Fuzzy Expert System**. Aplikasi semula dikembangkan untuk penyakit gigi, namun modul konsultasi utama kini berfokus pada dengue, sementara modul penyakit gigi tetap tersedia di area admin sebagai fitur tambahan/legacy.
 
 - Backend & frontend utama: Laravel 12 (PHP 8.2+)
-- Database: PostgreSQL (default, bisa disesuaikan ke MySQL/MariaDB)
+- Database: MySQL/MariaDB
 - Autentikasi: Laravel Breeze (Blade + Tailwind/Bootstrap)
 - Engine sistem pakar: Python 3 (FastAPI) di folder `python_engine`
 
