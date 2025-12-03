@@ -3,7 +3,7 @@
 Aplikasi web sistem pakar untuk membantu mendeteksi kemungkinan penyakit gigi berdasarkan gejala yang dipilih pasien.
 
 - Backend & frontend utama: Laravel 12 (PHP 8.2+)
-- Database: MySQL/MariaDB
+- Database: PostgreSQL
 - Autentikasi: Laravel Breeze (Blade + Tailwind/Bootstrap)
 - Engine sistem pakar: Python 3 (FastAPI) di folder `python_engine`
 
