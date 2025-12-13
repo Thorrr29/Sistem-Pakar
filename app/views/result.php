@@ -1,42 +1,111 @@
-<div class="card result-card">
-    <h2>Hasil Diagnosis Sistem Pakar</h2>
-    
-    <div class="result-grid">
-        <div class="box ml-box">
-            <h3>🤖 Machine Learning (Random Forest)</h3>
-            <p class="label">Prediksi: <strong><?= $data['ml']['label'] ?></strong></p>
-            <p>Probabilitas: <?= $data['ml']['probability_perc'] ?>%</p>
-        </div>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil Diagnosa CF</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: sans-serif; background-color: #f4f6f9; }
+        .result-box { padding: 40px 20px; border-radius: 15px; text-align: center; color: white; margin-bottom: 30px; }
+        .result-positif { background: linear-gradient(135deg, #dc3545, #ff6b6b); }
+        .result-negatif { background: linear-gradient(135deg, #198754, #20c997); }
+        .score-display { font-size: 3.5rem; font-weight: 700; }
+        .cf-log-item { border-left: 3px solid #0d6efd; padding-left: 10px; margin-bottom: 8px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
 
-        <div class="box fuzzy-box">
-            <h3>🧠 Fuzzy Logic System</h3>
-            <p class="score">Skor Keparahan: <strong><?= $data['fuzzy']['score'] ?> / 100</strong></p>
-            <p class="category">Kategori: <span class="badge"><?= $data['fuzzy']['category'] ?></span></p>
-            <hr>
-            <small>Detail Aktivasi Rule:</small>
-            <ul>
-                <li>Trombosit Low Degree: <?= number_format($data['fuzzy']['details']['rule_trombosit_low'], 2) ?></li>
-                <li>Demam Tinggi Degree: <?= number_format($data['fuzzy']['details']['rule_suhu_high'], 2) ?></li>
-            </ul>
+<nav class="navbar navbar-dark bg-primary mb-4 shadow-sm">
+    <div class="container"><a class="navbar-brand fw-bold" href="index.php">SISPAK DBD (CF Method)</a></div>
+</nav>
+
+<div class="container pb-5">
+    <?php 
+    if (empty($data)) {
+        echo "<div class='alert alert-warning text-center'>Data tidak ditemukan. Silakan diagnosa ulang.</div>";
+        exit;
+    }
+
+    $prediksi = $data['prediction'];
+    $persentase = $data['probability'];
+    $input = $data['input'];
+    $debug = $data['fuzzy_debug'] ?? []; // Ini isinya log CF
+    
+    // Labeling
+    $label = ($prediksi == 1) ? "POSITIF DBD" : "NEGATIF DBD";
+    $styleClass = ($prediksi == 1) ? "result-positif" : "result-negatif";
+    $icon = ($prediksi == 1) ? "fa-exclamation-triangle" : "fa-shield-alt";
+    ?>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="result-box <?= $styleClass ?>">
+                <i class="fas <?= $icon ?>" style="font-size: 4rem; margin-bottom: 15px;"></i>
+                <h1 class="fw-bold"><?= $label ?></h1>
+                <p class="mb-0 opacity-75">Tingkat Keyakinan (Certainty Factor)</p>
+                <div class="score-display"><?= $persentase ?>%</div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header bg-white fw-bold text-primary">Data Pasien</div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Suhu Tubuh</span> 
+                                    <span class="fw-bold"><?= $input['suhu_asli'] ?? '-' ?> °C</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Lama Demam</span> 
+                                    <span class="fw-bold"><?= $input['duration'] ?? 0 ?> Hari</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Trombosit</span> 
+                                    <span class="fw-bold"><?= number_format($input['platelet']) ?></span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Leukosit</span> 
+                                    <span class="fw-bold"><?= number_format($input['wbc']) ?></span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header bg-white fw-bold text-info">Rincian Perhitungan CF</div>
+                        <div class="card-body bg-light">
+                            <p class="small text-muted mb-3">Berikut adalah akumulasi keyakinan berdasarkan gejala:</p>
+                            
+                            <?php if(!empty($debug['cf_log'])): ?>
+                                <?php foreach($debug['cf_log'] as $log): ?>
+                                    <div class="cf-log-item bg-white p-2 rounded shadow-sm">
+                                        <i class="fas fa-check-circle text-success me-1"></i> <?= $log ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <p class="text-muted text-center">Tidak ada gejala signifikan yang terdeteksi.</p>
+                            <?php endif; ?>
+                            
+                            <hr>
+                            <div class="small text-muted">
+                                <b>Rumus:</b> CF_combine = CF_old + CF_new * (1 - CF_old)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="index.php" class="btn btn-outline-primary px-4">Diagnosa Ulang</a>
+                <a href="index.php?page=history" class="btn btn-primary px-4">Lihat Riwayat</a>
+            </div>
         </div>
     </div>
-
-    <div class="explanation">
-        <h3>Kesimpulan Sistem</h3>
-        <?php if($data['ml']['label'] == 'Positif DBD' && $data['fuzzy']['score'] > 50): ?>
-            <div class="alert danger">
-                <strong>PERINGATAN:</strong> Kedua metode (ML & Fuzzy) mengindikasikan risiko tinggi DBD. Segera periksakan ke dokter!
-            </div>
-        <?php elseif($data['ml']['label'] == 'Negatif' && $data['fuzzy']['score'] < 40): ?>
-            <div class="alert success">
-                Kemungkinan besar bukan DBD, namun tetap pantau kondisi suhu tubuh.
-            </div>
-        <?php else: ?>
-            <div class="alert warning">
-                Hasil inkonklusif (Berbeda antar metode). Disarankan pemeriksaan lab lebih lanjut.
-            </div>
-        <?php endif; ?>
-    </div>
-    
-    <a href="index.php?page=form" class="btn-secondary">Cek Ulang</a>
 </div>
+</body>
+</html>
