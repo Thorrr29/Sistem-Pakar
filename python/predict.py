@@ -67,9 +67,17 @@ def get_prediction():
             final_cf = calculate_cf_combine(final_cf, cf)
             log_perhitungan.append(f"Leukosit Rendah: CF +{cf}")
 
-        # 3. Durasi Demam
+    
+        # 3. Demam & Durasi
         if fever == 1:
+            # A. Tambahkan Nilai CF untuk Gejala Demam itu sendiri (INI YANG KURANG KEMARIN)
+            cf_gejala_demam = CF_RULES['demam']
+            final_cf = calculate_cf_combine(final_cf, cf_gejala_demam)
+            log_perhitungan.append(f"Gejala Demam (>37.5°C): CF +{cf_gejala_demam}")
+
+            # B. Baru Hitung Durasinya (Fase Pelana Kuda)
             cf_durasi = 0
+            msg = ""
             if 3 <= duration <= 5:
                 cf_durasi = CF_RULES['durasi_kritis']
                 msg = "Fase Kritis"

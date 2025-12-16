@@ -1,128 +1,110 @@
-# 🏥 Sistem Pakar Diagnosa Dini DBD (Hybrid ML + Fuzzy)
+# 🏥 Sistem Pakar Diagnosa Dini DBD (Metode Certainty Factor)
 
-Project ini adalah aplikasi web untuk mendiagnosis risiko Demam Berdarah Dengue (DBD) dengan pendekatan cerdas yang menggabungkan:
-1.  **Machine Learning (Random Forest):** Digunakan untuk melatih model prediksi berdasarkan dataset klinis.
-2.  **Fuzzy Logic (Metode Sugeno):** Digunakan pada *Inference Engine* untuk menghitung tingkat risiko (probabilitas) secara transparan dan detail berdasarkan aturan medis (Trombosit & Leukosit).
-
-> **Fitur Unggulan:** Sistem ini memiliki fitur **"White Box"**, di mana pengguna dapat melihat detail perhitungan (derajat keanggotaan/fuzzy membership) secara transparan pada menu Riwayat.
+Project ini adalah aplikasi web untuk mendiagnosis risiko Demam Berdarah Dengue (DBD) menggunakan metode **Certainty Factor (CF)**. Sistem ini dirancang untuk meniru cara berpikir dokter dalam menangani ketidakpastian gejala pasien.
 
 ---
 
-## 🏗️ Arsitektur Sistem
+## 🌟 Fitur Utama
 
-Sistem dibangun menggunakan integrasi lintas bahasa (*Cross-Language*):
-* **Backend/Frontend:** PHP Native (Konsep MVC: Model-View-Controller).
-* **Logic Engine:** Python 3.x (Menangani perhitungan Fuzzy & ML).
-* **Database:** PostgreSQL.
-* **Komunikasi:** PHP memanggil script Python via `shell_exec` dan bertukar data menggunakan format JSON.
+1.  **Diagnosa Berbasis Keyakinan (CF):** Tidak hanya "Ya/Tidak", tapi menghitung persentase keyakinan (misal: *98.2% Positif DBD*).
+2.  **Penanganan Ketidakpastian User:** Pengguna bisa memilih tingkat keparahan gejala fisik (Ringan, Sedang, Parah).
+3.  **Analisa Fase Demam:** Memperhitungkan siklus "Pelana Kuda" (Fase Kritis hari ke-3 s.d 5).
+4.  **Cross-Language Architecture:** Menggabungkan kemudahan PHP (Web) dengan presisi perhitungan Python.
+5.  **Transparansi (White Box):** Menampilkan log perhitungan detail pada menu Riwayat.
+
+---
+
+## 🧠 Metodologi Sistem
+
+### 1. Strategi Inferensi: Forward Chaining
+Sistem menggunakan alur **Runut Maju (Forward Chaining)**. Diagnosa dimulai dari pengumpulan fakta-fakta (Input Suhu, Lab, Gejala) dari pengguna, kemudian dicocokkan dengan Basis Pengetahuan (*Rule Base*) untuk menarik kesimpulan akhir.
+
+### 2. Metode Perhitungan: Certainty Factor (CF)
+Sistem menggunakan kombinasi nilai keyakinan Pakar dan User.
+
+**Rumus 1: Menghitung CF Gejala**
+$$CF_{Gejala} = CF_{Pakar} \times CF_{User}$$
+* **CF Pakar:** Nilai ketetapan medis (lihat tabel di bawah).
+* **CF User:** Bobot input pengguna (0.0 = Tidak, 0.5 = Ragu/Ringan, 1.0 = Yakin/Parah).
+
+**Rumus 2: Kombinasi Sekuensial (CF Combine)**
+Digunakan untuk menggabungkan banyak gejala menjadi satu nilai akhir.
+$$CF_{Baru} = CF_{Lama} + CF_{Gejala} \times (1 - CF_{Lama})$$
+
+---
+
+## 📚 Basis Pengetahuan (Knowledge Base)
+
+Berikut adalah aturan dan nilai keyakinan pakar yang digunakan dalam `python/predict.py`:
+
+| Kode | Parameter Gejala | Kondisi Medis | CF Pakar | Keterangan |
+| :-- | :--- | :--- | :--- | :--- |
+| **G1** | Trombosit | **< 100.000** | **0.9** | Kondisi Kritis / Bahaya |
+| **G2** | Trombosit | 100.000 - 150.000 | **0.8** | Trombositopenia |
+| **G3** | Leukosit (WBC) | < 4.000 | **0.6** | Leukopenia (Infeksi Virus) |
+| **G4** | Suhu Tubuh | $\ge$ 37.5°C | **0.4** | Febris (Demam) |
+| **G5** | Lama Demam | **Hari ke-3 s.d 5** | **0.8** | Fase Kritis (Pelana Kuda) |
+| **G6** | Lama Demam | Hari 1-2 atau 6-7 | **0.3** | Fase Awal / Pemulihan |
+| **G7** | Ruam Merah | Ada (Gejala Fisik) | **0.5** | Petechiae |
+| **G8** | Nyeri Otot | Ada (Gejala Fisik) | **0.2** | Myalgia |
+| **G9** | Mual/Muntah | Ada (Gejala Fisik) | **0.3** | Gangguan Pencernaan |
 
 ---
 
 ## 📂 Struktur Folder
 
-Pastikan struktur folder proyek Anda seperti berikut:
-
 ```text
 SISPAK/
 ├── app/
 │   ├── controllers/
-│   │   └── ConsultationController.php  # Pengendali logika alur (GET/POST)
+│   │   └── ConsultationController.php  # Menangani Logika Input & Database
 │   └── views/
-│       ├── form.php                    # Tampilan Input Gejala
-│       ├── result.php                  # Tampilan Hasil Diagnosa (UI Modern)
-│       └── history.php                 # Tampilan Riwayat & Detail Fuzzy (Modal)
+│       ├── form.php                    # Input (Suhu, Lab, Dropdown Gejala)
+│       ├── result.php                  # Hasil Diagnosa & Log CF
+│       └── history.php                 # Riwayat & Detail Perhitungan
 ├── public/
 │   ├── index.php                       # Router Utama
-│   └── database.php                    # Koneksi ke PostgreSQL
+│   └── database.php                    # Koneksi PostgreSQL
 ├── python/
-│   ├── models/
-│   │   └── model_rf.pkl                # Model ML (Random Forest - Opsional/Hybrid)
-│   ├── predict.py                      # Script Utama (Logika Fuzzy Sugeno)
-│   └── train_model.py                  # Script Pelatihan Model ML
-├── storage/
-│   └── Dengue_clinical_dataset.csv     # Dataset
+│   └── predict.py                      # Logic Engine (Rumus CF Combine)
 └── README.md
-````
 
------
+⚙️ Cara Instalasi
+1. Persyaratan Sistem
+Web Server: Laragon / XAMPP.
 
-## ⚙️ Prasyarat & Instalasi
+Bahasa: PHP >= 7.4 & Python 3.x.
 
-### 1\. Environment
+Database: PostgreSQL.
 
-  * **Laragon** (Rekomendasi untuk Windows) atau XAMPP yang mendukung PostgreSQL.
-  * **Python 3.x** terinstall dan terdaftar di Environment Variable (CMD).
-  * **PostgreSQL** (Port Default: 5432).
+2. Setup Database
+Buat database baru bernama sistempakar dan jalankan query berikut:
 
-### 2\. Konfigurasi PHP (PENTING\!)
+SQL
 
-Pastikan driver PostgreSQL di PHP sudah aktif agar tidak error *"Driver not found"*.
-
-  * Buka **Laragon** \> Menu \> **PHP** \> **Extensions**.
-  * Centang **`pdo_pgsql`** dan **`pgsql`**.
-
-### 3\. Instalasi Library Python
-
-Buka terminal dan jalankan perintah berikut:
-
-```bash
-pip install pandas scikit-learn
-```
-
-### 4\. Setup Database
-
-Buat database bernama `sistempakar` di PostgreSQL (via HeidiSQL/pgAdmin), lalu jalankan query ini:
-
-```sql
 CREATE TABLE consultations (
     id SERIAL PRIMARY KEY,
-    input_data JSON,        -- Menyimpan input gejala pasien
-    ml_result JSON,         -- Menyimpan hasil diagnosa & detail fuzzy
+    input_data JSON,        -- Menyimpan input mentah (Suhu, Lab, dll)
+    ml_result JSON,         -- Menyimpan hasil CF & Log Perhitungan
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-```
 
------
+3. Konfigurasi
+Pastikan driver pdo_pgsql aktif di PHP.
 
-## 🚀 Cara Menjalankan
+Pastikan path python di ConsultationController.php sudah sesuai dengan environment komputer Anda.
 
-1.  Pastikan folder proyek berada di `C:\laragon\www\sispak`.
-2.  Jalankan **Laragon** (Klik **Start All**).
-3.  Buka browser dan akses:
-    ```
-    http://localhost/sispak/public/
-    ```
-4.  Lakukan diagnosa baru.
-5.  Untuk melihat detail perhitungan, buka menu **Riwayat Data** dan klik tombol **Detail**.
+🚀 Cara Penggunaan
+Buka browser: http://localhost/sispak/public/.
 
------
+- Isi Suhu Tubuh dan Lama Demam (Penting untuk deteksi fase kritis).
 
-## 🧠 Penjelasan Metode Fuzzy (Sugeno)
+- Isi Data Lab (Trombosit & Leukosit).
 
-Sistem menggunakan **Fuzzy Logic Orde Nol (Sugeno)** untuk menentukan skor risiko dengan langkah berikut:
+- Pilih tingkat keparahan gejala fisik (Tidak Ada / Ringan / Parah).
 
-### 1\. Fuzzifikasi (Pemetaan Input ke Derajat 0-1)
+- Klik Hitung Keyakinan.
 
-  * **Trombosit:** Menggunakan Kurva Bahu Kiri (Linear Down).
-      * *Range:* 100.000 (Sangat Rendah) s.d 150.000 (Batas Normal).
-  * **Leukosit (WBC):** Menggunakan Kurva Bahu Kiri.
-      * *Range:* 3.500 s.d 4.500.
+- Lihat hasil persentase dan rincian perhitungan pada halaman hasil.
 
-### 2\. Basis Aturan (Rule Base)
-
-Sistem mengevaluasi risiko berdasarkan aturan pakar:
-
-  * *IF Trombosit Rendah THEN Risiko = 100 (Sangat Tinggi)*
-  * *IF Trombosit Normal AND WBC Rendah THEN Risiko = 60 (Sedang)*
-  * *IF Trombosit Normal AND WBC Normal THEN Risiko = 10 (Rendah)*
-  * *+ Bobot Tambahan dari Gejala Klinis (Demam, Nyeri, dll)*
-
-### 3\. Defuzzifikasi
-
-Menggunakan metode **Weighted Average** (Rata-rata Tertimbang) untuk menghasilkan nilai persentase akhir yang akurat.
-
------
-
-**Dibuat untuk Tugas Akhir / Skripsi Sistem Pakar.**
-
-```
+# Dibuat untuk Tugas Akhir / Skripsi Sistem Pakar.
