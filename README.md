@@ -68,6 +68,7 @@ SISPAK/
 ├── python/
 │   └── predict.py                      # Logic Engine (Rumus CF Combine)
 └── README.md
+```
 
 ⚙️ Cara Instalasi
 1. Persyaratan Sistem
@@ -106,5 +107,5 @@ Buka browser: http://localhost/sispak/public/.
 - Klik Hitung Keyakinan.
 
 - Lihat hasil persentase dan rincian perhitungan pada halaman hasil.
-
-# Dibuat untuk Tugas Akhir / Skripsi Sistem Pakar.
+  
+## Dibuat untuk Tugas Akhir / Skripsi Sistem Pakar.
