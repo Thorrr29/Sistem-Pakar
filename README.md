@@ -68,6 +68,7 @@ SISPAK/
 ├── python/
 │   └── predict.py                      # Logic Engine (Rumus CF Combine)
 └── README.md
+```
 
 ⚙️ Cara Instalasi
 1. Persyaratan Sistem
@@ -81,14 +82,14 @@ Database: PostgreSQL.
 Buat database baru bernama sistempakar dan jalankan query berikut:
 
 SQL
-
+```
 CREATE TABLE consultations (
     id SERIAL PRIMARY KEY,
-    input_data JSON,        -- Menyimpan input mentah (Suhu, Lab, dll)
-    ml_result JSON,         -- Menyimpan hasil CF & Log Perhitungan
+    input_data JSON,       
+    ml_result JSON,       
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
+```
 3. Konfigurasi
 Pastikan driver pdo_pgsql aktif di PHP.
 
@@ -106,5 +107,5 @@ Buka browser: http://localhost/sispak/public/.
 - Klik Hitung Keyakinan.
 
 - Lihat hasil persentase dan rincian perhitungan pada halaman hasil.
-
-# Dibuat untuk Tugas Akhir / Skripsi Sistem Pakar.
+  
+## Dibuat untuk Tugas Akhir / Skripsi Sistem Pakar.
