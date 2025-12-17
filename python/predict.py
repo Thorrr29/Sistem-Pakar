@@ -93,8 +93,7 @@ def get_prediction():
                 log_perhitungan.append(f"Durasi {duration} Hari ({msg}): CF {cf_durasi}")
         
         # 4. GEJALA FISIK DENGAN BOBOT USER (LOGIKA BARU)
-        # Rumus: CF_Gejala = CF_Pakar * CF_User
-        
+        # Rumus: CF_Gejala = CF_Pakar * CF_User      
         if muscle_pain > 0:
             cf_hasil = CF_RULES['nyeri_otot'] * muscle_pain
             final_cf = calculate_cf_combine(final_cf, cf_hasil)

@@ -12,6 +12,11 @@
         .card { border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .nav-link { color: rgba(255,255,255,0.8) !important; }
         .nav-link:hover { color: #fff !important; }
+        
+        /* Styling untuk info range */
+        .range-info { font-size: 0.75rem; margin-top: 4px; line-height: 1.4; color: #6c757d; }
+        .range-danger { color: #dc3545; font-weight: 600; }
+        .range-warning { color: #fd7e14; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -40,21 +45,32 @@
 
                     <form action="index.php" method="POST">
                         <div class="row g-3">
+                            
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small text-muted">Suhu Tubuh (°C)</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-thermometer-half text-danger"></i></span>
                                     <input type="number" step="0.1" name="suhu" class="form-control" placeholder="38.5" required>
                                 </div>
+                                <div class="range-info">
+                                    Normal: 36.5 - 37.2°C<br>
+                                    <span class="range-danger">Demam: &ge; 37.5°C</span>
+                                </div>
                             </div>
+
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small text-muted">Lama Demam (Hari)</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-clock text-warning"></i></span>
                                     <input type="number" name="duration" class="form-control" placeholder="3" min="0" required>
                                 </div>
-                                <small class="text-muted" style="font-size:0.75rem">*Fase Kritis: Hari ke-3 s/d 5</small>
+                                <div class="range-info">
+                                    Fase Awal: Hari 1-2<br>
+                                    <span class="range-danger">Fase Kritis: Hari 3-5 (Siklus Pelana Kuda)</span>
+                                </div>
                             </div>
+                            
+                            
 
                             <div class="col-12"><hr class="my-2 opacity-25"></div>
 
@@ -64,15 +80,23 @@
                                     <span class="input-group-text"><i class="fas fa-tint text-danger"></i></span>
                                     <input type="number" name="platelet" class="form-control" placeholder="100000" required>
                                 </div>
-                                <small class="text-muted" style="font-size:0.75rem">Normal: 150.000 - 450.000</small>
+                                <div class="range-info">
+                                    Normal: 150.000 - 450.000<br>
+                                    <span class="range-warning">Waspada: 100.000 - 150.000</span><br>
+                                    <span class="range-danger">Bahaya (Kritis): < 100.000</span>
+                                </div>
                             </div>
+
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small text-muted">Leukosit (WBC)</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-dna text-success"></i></span>
                                     <input type="number" name="wbc" class="form-control" placeholder="4000" required>
                                 </div>
-                                <small class="text-muted" style="font-size:0.75rem">Normal: 4.500 - 11.000</small>
+                                <div class="range-info">
+                                    Normal: 4.000 - 11.000<br>
+                                    <span class="range-warning">Rendah (Virus): < 4.000</span>
+                                </div>
                             </div>
 
                             <div class="col-12 mt-4">
